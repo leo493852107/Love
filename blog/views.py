@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 from django.views import generic
 
-from blog.models import Category, Article
+from blog.models import Category, Article, Tag
 
 import markdown2
 
@@ -35,6 +35,10 @@ class IndexView(generic.ListView):
     def get_context_data(self, **kwargs):
         # 增加额外的数据，这里返回一个文章分类，以字典的形式
         kwargs['category_list'] = Category.objects.all().order_by('name')
+        # 调用 archive 方法，把获取的时间列表插入到 context 上下文中以便在模板中渲染
+        kwargs['date_archive'] = Article.objects.archive()
+        # tag_list 加入 context 里：
+        kwargs['tag_list'] = Tag.objects.all().order_by('name')
         return super(IndexView, self).get_context_data(**kwargs)
 
 
@@ -74,3 +78,40 @@ class CategoryView(generic.ListView):
         # 增加一个category_list,用于在页面显示所有分类，按照名字排序
         kwargs['category_list'] = Category.objects.all().order_by('name')
         return super(CategoryView, self).get_context_data(**kwargs)
+
+
+class TagView(generic.ListView):
+    template_name = 'blog/index.html'
+    context_object_name = 'article_list'
+
+    def get_queryset(self):
+        """
+        根据指定的标签获取该标签下的全部文章
+        """
+        article_list = Article.objects.filter(tags=self.kwargs['tag_id'], status='p')
+        for article in article_list:
+            article.content = markdown2.markdown(article.content, extras=['fenced-code-blocks'], )
+        return article_list
+
+    def get_context_data(self, **kwargs):
+        kwargs['tag_list'] = Tag.objects.all().order_by('name')
+        return super(TagView, self).get_context_data(**kwargs)
+
+
+class ArchiveView(generic.ListView):
+    template_name = 'blog/index.html'
+    context_object_name = 'article_list'
+
+    def get_queryset(self):
+        # 接收从url传递的year和month参数，转为int类型
+        year = int(self.kwargs['year'])
+        month = int(self.kwargs['month'])
+        # 按照year和month过滤文章
+        article_list = Article.objects.filter(create_time__year=year, create_time__month=month)
+        for article in article_list:
+            article.content = markdown2.markdown(article.content, extras=['fenced-code-blocks'], )
+        return article_list
+
+    def get_context_data(self, **kwargs):
+        kwargs['tag_list'] = Tag.objects.all().order_by('name')
+        return super(ArchiveView, self).get_context_data(**kwargs)
