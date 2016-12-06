@@ -29,10 +29,48 @@ class IndexView(generic.ListView):
         article_list = Article.objects.filter(status='p')
         for article in article_list:
             # 将markdown标记的文本转为html文本
-            article.content = markdown2.markdown(article.content, )
+            article.content = markdown2.markdown(article.content, extras=['fenced-code-blocks'], )
         return article_list
 
     def get_context_data(self, **kwargs):
         # 增加额外的数据，这里返回一个文章分类，以字典的形式
         kwargs['category_list'] = Category.objects.all().order_by('name')
         return super(IndexView, self).get_context_data(**kwargs)
+
+
+class ArticleDetailView(generic.DetailView):
+    # 指定视图获取哪个model
+    model = Article
+    template_name = "blog/detail.html"
+    context_object_name = "article"
+
+    # 这里注意，pk_url_kwarg用于接收一个来自url中的主键，然后会根据这个主键进行查询
+    pk_url_kwarg = 'article_id'
+
+    # 指定以上几个属性，已经能够返回一个DetailView视图了，为了让文章以markdown形式展现，我们重写get_object()方法。
+    # get_object() 返回该视图要显示的对象。
+    # 如果有设置 queryset，该queryset 将用于对象的源；
+    # 否则，将使用get_queryset(). get_object()从视图的所有参数中查找 pk_url_kwarg 参数；
+    # 如果找到了这个参数，该方法使用这个参数的值执行一个基于主键的查询。
+    def get_object(self):
+        obj = super(ArticleDetailView, self).get_object()
+        obj.content = markdown2.markdown(obj.content, extras=['fenced-code-blocks'], )
+        return obj
+
+
+class CategoryView(generic.ListView):
+    template_name = "blog/index.html"
+    context_object_name = "article_list"
+
+    def get_queryset(self):
+        # 注意在url里我们捕获了分类的id作为关键字参数（cate_id）传递给了CategoryView，传递的参数在kwargs属性中获取。
+        article_list = Article.objects.filter(category=self.kwargs['cate_id'], status='p')
+        for article in article_list:
+            article.content = markdown2.markdown(article.content, extras=['fenced-code-blocks'], )
+        return article_list
+
+    # 给视图增加额外的数据
+    def get_context_data(self, **kwargs):
+        # 增加一个category_list,用于在页面显示所有分类，按照名字排序
+        kwargs['category_list'] = Category.objects.all().order_by('name')
+        return super(CategoryView, self).get_context_data(**kwargs)

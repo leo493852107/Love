@@ -9,5 +9,6 @@ from . import views
 app_name = 'blog'
 urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name='index'),
+    url(r'^article/(?P<article_id>\d+)$', views.ArticleDetailView.as_view(), name='detail'),
+    url(r'^category/(?P<article_id>\d+)$', views.CategoryView.as_view(), name='category'),
 ]
-
