@@ -68,7 +68,7 @@ class CategoryView(generic.ListView):
 
     def get_queryset(self):
         # 注意在url里我们捕获了分类的id作为关键字参数（cate_id）传递给了CategoryView，传递的参数在kwargs属性中获取。
-        article_list = Article.objects.filter(category=self.kwargs['cate_id'], status='p')
+        article_list = Article.objects.filter(category=self.kwargs['article_id'], status='p')
         for article in article_list:
             article.content = markdown2.markdown(article.content, extras=['fenced-code-blocks'], )
         return article_list

@@ -3,11 +3,13 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.utils.encoding import python_2_unicode_compatible
 
 from collections import defaultdict
 
 
 # Create your models here.
+@python_2_unicode_compatible
 class Category(models.Model):
     name = models.CharField('类名', max_length=20)
     create_time = models.DateTimeField('创建时间', auto_now_add=True)
@@ -33,6 +35,7 @@ class ArticleManage(models.Manager):
         return sorted(date_dict.items(), reverse=True)
 
 
+@python_2_unicode_compatible
 class Article(models.Model):
     STATUS_CHOICE = (
         ('d', 'Draft'),
@@ -65,6 +68,7 @@ class Article(models.Model):
         ordering = ['-last_modified_time']
 
 
+@python_2_unicode_compatible
 class Tag(models.Model):
     """
     tag(标签)对应的数据库model
